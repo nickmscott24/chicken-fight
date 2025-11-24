@@ -57,16 +57,16 @@ checkForInvalid:
     # let user retry is name is invalid
     lb $t0, 0($a0)
     blt $t0, 65, invalidChicken    # 65 is the start of valid ascii ('A')
-    bgt $t0, 122, invalidChicken    # 122 is the end of valid ascii ('z')
+    bgt $t0, 122, invalidChicken   # 122 is the end of valid ascii ('z')
     bgt $t0, 90, checkASCII        # 91-96 are invalid ascii
 
-name is valid; proceed
+    # name is valid; proceed
     jr $ra
 
 checkASCII:
     blt $t0, 97, invalidChicken
 
-name is valid; proceed
+    # name is valid; proceed
     jr $ra
 
 invalidChicken:
