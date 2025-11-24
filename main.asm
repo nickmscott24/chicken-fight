@@ -24,11 +24,9 @@ getChickenName:
 	li $v0, 8
 	la $a0, chickenBuffer
 	lw $a1, chickenCharNum
-	syscall
-	
+	syscall	
+
 	jal checkForInvalid
-	
-		
 	# if no issues, proceed to betting
 	j placeBet
 
