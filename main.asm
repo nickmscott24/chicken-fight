@@ -43,31 +43,44 @@ firstChicken:    # if the player just started
     j getChickenName
 
 getChickenName:
+	# write name to chickenBuffer
     printString(chickenPrompt)
     li $v0, 8
     la $a0, chickenBuffer
     lw $a1, chickenCharNum
     syscall
 
-    jal checkForInvalid
-    # if no issues, proceed to betting
-    j placeBet
-
-checkForInvalid:
+	move $t1, $a0	# copy for use
+    j checkIfValid
+    
+checkIfValid:
     # let user retry is name is invalid
-    lb $t0, 0($a0)
-    blt $t0, 65, invalidChicken    # 65 is the start of valid ascii ('A')
-    bgt $t0, 122, invalidChicken   # 122 is the end of valid ascii ('z')
-    bgt $t0, 90, checkASCII        # 91-96 are invalid ascii
+    lb $t0, ($t1)		# load single byte (one character) 
+    addi $t1, $t1, 1	# shift to next byte 
+    
+	# continue to betting if string is valid
+    beqz $t0, placeBet	# branch on null terminator
+    
+    # char is not \0, check if it's valid
+    beq $t0, '\n', isNewLine		# specific case if newline
+    blt $t0, 'A', invalidChicken	# 'A' is the start of valid ascii
+    bgt $t0, 'z', invalidChicken	# 'z' is the end of valid ascii
+    bgt $t0, 'Z', checkASCII		# between 'Z' and 'a' is invalid ascii
 
-    # name is valid; proceed
-    jr $ra
+	# char is valid, proceed to next
+	j checkIfValid
 
+isNewLine:
+	beq $t1, 1, invalidChicken	# invalid if the first char is \n
+	
+	# not the first character, valid
+	j checkIfValid
+	
 checkASCII:
-    blt $t0, 97, invalidChicken
+    blt $t0, 'a', invalidChicken
 
-    # name is valid; proceed
-    jr $ra
+    # char is valid, proceed to next
+    j checkIfValid
 
 invalidChicken:
     printString(invalidChickenString)
