@@ -44,6 +44,17 @@ menuLoop:
 firstChicken:    # if the player just started
     printString(gift)
     printString(line)
+    
+    # update chicken
+    la $t1, chickenOwned
+    li $t2, 1
+    sw $t2, 0($t1)
+
+    # update money
+    la $t1, money
+    li $t2, 50
+    sw $t2, 0($t1)
+    
     j getChickenName
 
 getChickenName:
