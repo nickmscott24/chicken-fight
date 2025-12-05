@@ -25,42 +25,16 @@ barEmpty: .asciiz "-"
 typingDots: .asciiz "."
 typingDone: .asciiz " Done!\n"
 
-newLine: .asciiz "\n"
+uiNewLine: .asciiz "\n"
 
 .text
 
-.globl uiBanner
-.globl uiMenu
-.globl uiInvalid
-.globl uiNewLine
-.globl uiPrintHPBars
-.globl uiTyping
-.globl uiPause
-
-uiBanner:
-    printString bannerTop
-    jr $ra
-
-uiMenu:
-    printString mainMenuTitle
-    printString menuLine
-    printString menuOptionsText
-    jr $ra
-
-uiInvalid:
-    printString invalidChoiceMsg
-    jr $ra
-
-uiNewLine:
-    printString newlineStr
-    jr $ra
-
 uiPrintHPBars:
     #print player label
-    printString hpLabelPlayer
-    move $t0, $a0
+    printString(hpLabelPlayer)
+    la $t0, hpLabelPlayer
     jal printBar
-    jal uiNewLine
+    printString(uiNewLine)
 
     #print enemy label
     printString hpLabelEnemy

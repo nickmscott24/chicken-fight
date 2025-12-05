@@ -1,4 +1,3 @@
-.include "macros.asm"
 .include "ui.asm"
 .include "chickenFight.asm"
 
@@ -17,21 +16,21 @@ invalidChickenString: .asciiz "\nTry again, but this time actually put in a name
 .align 2
 chickenBuffer: .space 20
 chickenCharNum: .word 21
+
+placeBetString: .asciiz "\nEnter your bet: "
+invalidBetString: .asciiz "\nInvalid bet; please try again.\n"
 money: .word 50
 chickenOwned: .word 0
-playerHP: .word 100
-enemyHP: .word 100
 fightResult: .word 0
 wins: .word 0
 currentBet: .word 0
 
 .text
-start:
-    printString(menu)
-
 menuLoop:
-    jal uiBanner
-    jal uiMenu
+    printString(bannerTop)
+    printString(mainMenuTitle)
+    printString(menuLine)
+    printString(menuOptionsText)
 
     li $v0, 5           #read integer choice
     syscall
@@ -39,70 +38,60 @@ menuLoop:
 
     beq $t0, 1, firstChicken
     beq $t0, 2, exit
-    jal uiInvalid
-    j menuLoop
-
-    li $v0, 12          # read char '1' or '2'
-    syscall
-    move $t0, $v0
-
-    beq $t0, '1', firstChicken
-    beq $t0, '2', exit
     printString(invalidSelect)
     j menuLoop
 
-firstChicken:            # if the player just started
+firstChicken:    # if the player just started
     printString(gift)
     printString(line)
-
-    # give money and chicken only once
-    la $t1, chickenOwned
-    lw $t2, 0($t1)
-    bnez $t2, getChickenName      # already owns a chicken
-
-    # give first chicken
-    li $t3, 1
-    sw $t3, 0($t1)
-
-    # give money
-    la $t4, money
-    li $t5, 50
-    sw $t5, 0($t4)
-
     j getChickenName
 
 getChickenName:
+	# write name to chickenBuffer
     printString(chickenPrompt)
-
     li $v0, 8
     la $a0, chickenBuffer
     lw $a1, chickenCharNum
     syscall
 
-    jal checkForInvalid
+	move $t1, $a0	# copy for use
+    j checkIfValid
+    
+checkIfValid:
+    # let user retry is name is invalid
+    lb $t0, ($t1)		# load single byte (one character) 
+    addi $t1, $t1, 1	# shift to next byte 
+    
+	# continue to betting if string is valid
+    beqz $t0, placeBet	# branch on null terminator
+    
+    # char is not \0, check if it's valid
+    beq $t0, '\n', isNewLine		# specific case if newline
+    blt $t0, 'A', invalidChicken	# 'A' is the start of valid ascii
+    bgt $t0, 'z', invalidChicken	# 'z' is the end of valid ascii
+    bgt $t0, 'Z', checkASCII		# between 'Z' and 'a' is invalid ascii
 
-    j placeBet
+	# char is valid, proceed to next
+	j checkIfValid
 
-checkForInvalid:
-    # always load from chickenBuffer
-    la $t9, chickenBuffer
-    lb $t0, 0($t9)
-
-    blt $t0, 65, invalidChicken        # below 'A'
-    bgt $t0, 122, invalidChicken       # above 'z'
-    bgt $t0, 90, checkASCII            # between 'Z' and 'a'
-    jr $ra
-
+isNewLine:
+	beq $t1, 1, invalidChicken	# invalid if the first char is \n
+	
+	# not the first character, valid
+	j checkIfValid
+	
 checkASCII:
-    blt $t0, 97, invalidChicken        # reject ASCII 91–96
-    jr $ra
+    blt $t0, 'a', invalidChicken
+
+    # char is valid, proceed to next
+    j checkIfValid
 
 invalidChicken:
     printString(invalidChickenString)
     j getChickenName
 
 placeBet:
-    printString("Enter your bet: ")
+    printString(placeBetString)
 
     li $v0, 5
     syscall
@@ -125,7 +114,7 @@ placeBet:
     j beginFight
 
 invalidBet:
-    printString("Invalid bet!\n")
+    printString(invalidBetString)
     j placeBet
 
 beginFight:
