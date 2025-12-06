@@ -1,13 +1,24 @@
-.include "ui.asm"
-.include "chickenFight.asm"
+.include "macros.asm"
+.include "data.asm"
+
+.globl menuLoop
+.globl firstChicken
+.globl getChickenName
+.globl checkIfValid
+.globl isNewLine
+.globl checkASCII
+.globl invalidChicken
+.globl placeBet
+.globl invalidBet
+.globl beginFight
+.globl onPlayerWin
+.globl onEnemyWin
+.globl gameOver
+.globl exit
 
 .data
-menu: .asciiz "Welcome to Chicken Fight\n"
-select: .asciiz "Please make a selection: \n"
-option1: .asciiz "(1) Play\n"
-option2: .asciiz "(2) Exit\n"
-choice: .asciiz "Choice: "
-invalidSelect: .asciiz "Invalid input, please try again.\n"
+menu1: .asciiz "Welcome to Chicken Fight\nPlease make a selection:\n(1) Play\n(2) Exit\nChoice: "
+menu2: .asciiz "Main Menu:\n1) Play\n2) Store\n3) State\n4) Save Game\n5) Load Game\n6) Quit\nChoice: "
 playAgain: .asciiz "Would you like to play again?\n"
 gift: .asciiz "\nThanks for playing!\nIn fact, have $50 and a chicken on the house!\n"
 line: .asciiz "\n~~~~~~~~~~~~~~~\n"
@@ -19,42 +30,42 @@ chickenCharNum: .word 21
 
 placeBetString: .asciiz "\nEnter your bet: "
 invalidBetString: .asciiz "\nInvalid bet; please try again.\n"
-money: .word 50
-chickenOwned: .word 0
+currentBet: .word 0
 fightResult: .word 0
 wins: .word 0
-currentBet: .word 0
 
 .text
-menuLoop:
-    printString(bannerTop)
-    printString(mainMenuTitle)
-    printString(menuLine)
-    printString(menuOptionsText)
-
-    li $v0, 5           #read integer choice
-    syscall
+start:	# on run
+    printString(menu1)
+    
+    # get selection
+    getInt
     move $t0, $v0
 
     beq $t0, 1, firstChicken
     beq $t0, 2, exit
-    printString(invalidSelect)
+    
+    printString(invalidChoiceMsg)
+    j start
+    
+menuLoop:	# menu if NOT player's first time
+	printString(menu2)
+	
+	# get selection
+	getInt
+	move $t0, $v0
+	beq $t0, 1, placeBet
+	beq $t0, 2, shopStart
+	# others have not been implemented
+    beq $t0, 6, exit
+    
+    printString(invalidChoiceMsg)
     j menuLoop
+	
 
 firstChicken:    # if the player just started
     printString(gift)
     printString(line)
-    
-    # update chicken
-    la $t1, chickenOwned
-    li $t2, 1
-    sw $t2, 0($t1)
-
-    # update money
-    la $t1, money
-    li $t2, 50
-    sw $t2, 0($t1)
-    
     j getChickenName
 
 getChickenName:
@@ -139,17 +150,17 @@ beginFight:
     sw $t0, 0($t2)
 
     # call fight (one cycle)
-    jal fight
+    jal fightLoop
 
     # read result
     la $t3, fightResult
     lw $t4, 0($t3)
 
     li $t5, 1
-    beq $t4, $t5, playerWins
+    beq $t4, $t5, onPlayerWin
 
     li $t5, 2
-    beq $t4, $t5, enemyWins
+    beq $t4, $t5, onEnemyWin
 
     # nobody died ? refund bet
     la $t6, currentBet
@@ -163,7 +174,7 @@ beginFight:
 
     j menuLoop
 
-playerWins:
+onPlayerWin:
     # add winnings (double)
     la $t0, currentBet
     lw $t1, 0($t0)
@@ -180,11 +191,11 @@ playerWins:
     addi $t5, $t5, 1
     sw $t5, 0($t4)
 
-    printString("Your chicken wins the fight!\n")
+    print("Your chicken wins the fight!\n")
     j menuLoop
 
-enemyWins:
-    printString("Your chicken died!\n")
+onEnemyWin:
+    print("Your chicken died!\n")
 
     # mark chicken as dead
     la $t0, chickenOwned
@@ -205,11 +216,11 @@ enemyWins:
     li $t1, 1
     sw $t1, 0($t0)
 
-    printString("You bought a new chicken!\n")
+    print("You bought a new chicken!\n")
     j menuLoop
 
 gameOver:
-    printString("Not enough money to continue.\nGame Over.\n")
+    print("Not enough money to continue.\nGame Over.\n")
     j exit
 
 exit:

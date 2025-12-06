@@ -1,7 +1,14 @@
+.include "data.asm"
+
+.globl fightLoop
+.globl enemyZero
+.globl checkEnemyDead
+.globl playerZero
+.globl checkPlayerDead
+.globl playerWins
+.globl enemyWins
+
 .data
-playerHP: .word 100        #user starting hp
-enemyHP: .word 100        #enemy starting hp
-newLine: .asciiz "\n"
 playerMessage: .asciiz "You dealt damage: "
 enemyMessage: .asciiz "Enemy dealt damage: "
 playerHPMessage: .asciiz "Your chicken HP: "
@@ -10,9 +17,6 @@ playerWinMessage: .asciiz "Your chicken wins!"
 enemyWinMessage: .asciiz "Opponent wins! Your chicken has been defeated!"
 
 .text
-.globl fight
-fight:
-
 fightLoop:
 
     #generate the random damage from 0 to 10

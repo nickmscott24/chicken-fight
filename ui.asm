@@ -4,16 +4,21 @@
 #Andrew Rabadi, Kenny Huynh, Orobosa Aghahowa, Nicholas Scott
 
 .include "macros.asm"
+.include "data.asm"
+
+.globl uiPrintHPBars
+.globl printBar
+.globl full_Loop
+.globl emptyCalc
+.globl emptyLoop
+.globl closeBar
+.globl uiTyping
+.globl typingLoop
+.globl typingFinish
+.globl uiPause
+.globl pauseLoop
 
 .data
-bannerTop: .asciiz  "\n==================[ CHICKEN FIGHT ]==================\n"
-menuLine: .asciiz  "------------------------------------------------------\n"
-
-mainMenuTitle: .asciiz "\nMAIN MENU\n"
-menuOptionsText: .asciiz "1) Play\n2) Store\n3) State\n4) Save Game\n5) Load Game\n6) Quit\nChoice: "
-
-invalidChoiceMsg: .asciiz "Invalid selection. Try again.\n"
-
 hpLabelPlayer: .asciiz "Player HP: "
 hpLabelEnemy: .asciiz "Enemy  HP: "
 
@@ -25,8 +30,6 @@ barEmpty: .asciiz "-"
 typingDots: .asciiz "."
 typingDone: .asciiz " Done!\n"
 
-uiNewLine: .asciiz "\n"
-
 .text
 
 uiPrintHPBars:
@@ -34,19 +37,19 @@ uiPrintHPBars:
     printString(hpLabelPlayer)
     la $t0, hpLabelPlayer
     jal printBar
-    printString(uiNewLine)
+    printString(newLine)
 
     #print enemy label
-    printString hpLabelEnemy
+    printString(hpLabelEnemy)
     move $t0, $a1
     jal printBar
-    jal uiNewLine
+    jal newLine
 
     jr $ra
 
 printBar:
     # print '['
-    printString barStart
+    printString(barStart)
 
     #compute number of filled segments (#)
     #bar = 20 characters
@@ -60,7 +63,7 @@ printBar:
     move $t5, $zero
 full_Loop:
     beq $t5, $t4, emptyCalc
-    printString barFull
+    printString(barFull)
     addi $t5, $t5, 1
     j full_Loop
 
@@ -72,12 +75,12 @@ emptyCalc:
 
 emptyLoop:
     beq $t7, $t6, closeBar
-    printString barEmpty
+    printString(barEmpty)
     addi $t7, $t7, 1
     j emptyLoop
 
 closeBar:
-    printString barEnd
+    printString(barEnd)
     jr $ra
 
 uiTyping:
@@ -85,13 +88,13 @@ uiTyping:
     li $t0, 3
 typingLoop:
     beqz $t0, typingFinish
-    printString typingDots
+    printString(typingDots)
     jal uiPause
     addi $t0, $t0, -1
-    j typing_loop
+    j typingLoop
 
 typingFinish:
-    printString typingDone
+    printString(typingDone)
     jr $ra
 
 

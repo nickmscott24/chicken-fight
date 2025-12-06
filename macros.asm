@@ -5,6 +5,15 @@
 	syscall
 .end_macro
 
+# prints a given string literal
+.macro print(%stringLiteral)
+	.data
+	string: .asciiz %stringLiteral
+	
+	.text
+	printString(string)
+.end_macro
+
 # prints integer from register
 .macro printInt(%int)
 	li $v0, 1
