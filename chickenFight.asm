@@ -1,24 +1,31 @@
 .data
-playerMessage: .asciiz "\nYou dealt damage: "
-enemyMessage: .asciiz "\nEnemy dealt damage: "
-playerHPMessage: .asciiz "\nYour chicken HP: "
-enemyHPMessage: .asciiz "\nEnemy chicken HP: "
-playerWinMessage: .asciiz "\nYour chicken wins!"
-enemyWinMessage: .asciiz "\nOpponent wins! Your chicken has been defeated!"
+playerDamage1: .asciiz " hit Enemy for "
+playerDamage2: .asciiz " damage\n"
+enemyDamage1: .asciiz "Enemy hit "
+enemyDamage2: .asciiz " for "
+enemyDamage3: .asciiz " damage\n"
+playerHPMessage: .asciiz "'s HP: "
+enemyHPMessage: .asciiz "\nEnemy's HP: "
 
 .text
 fightLoop:
+	printChar('\n')	# print new line character
+    
     # do player turn
     jal playerTurn
+    jal printHealth
     jal timer
     
     # check if enemy dead
     lb $t0, enemyHP
     blez $t0, onPlayerWin
     
+	printChar('\n')	# print new line character
+    
     # do enemy turn
     jal enemyTurn
-	jal timer
+	jal printHealth
+    jal timer
     
     # check if player dead
     lb $t0, playerHP
@@ -33,16 +40,23 @@ playerTurn:
     jalr $t1, $t0	# damage stored in $t0
     
     # print out damage message
-    printString(playerMessage)
-    printInt($t0)
+    printString(chickenBuffer)	# [player]
+    printString(playerDamage1)	# hit Enemy for
+    printInt($t0)				# [damage]
+    printString(playerDamage2)	# damage
 
     # subtract damage from enemy HP
     lb $t1, enemyHP
     sub $t1, $t1, $t0
+    bltz $t1, setEnemyZero	# prevent negative HP
     sb $t1, enemyHP
     
     # return to loop
     jr $ra
+    
+setEnemyZero:
+	sb $zero, enemyHP
+	jr $ra	# return to loop
 
 enemyTurn:
 	# generate the random damage from 1 to 10
@@ -50,16 +64,24 @@ enemyTurn:
     jalr $t1, $t0	# damage stored in $t0
     
     # print out damage message
-    printString(enemyMessage)
-    printInt($t0)
+    printString(enemyDamage1)	# Enemy hit
+    printString(chickenBuffer)	# [player]
+    printString(enemyDamage2)	# for
+    printInt($t0)				# [damage]
+    printString(enemyDamage3)	# damage
 
     # subtract damage from player HP
     lb $t1, playerHP
     sub $t1, $t1, $t0
+    bltz $t1, setPlayerZero	# prevent negative HP
     sb $t1, playerHP
     
     # return to loop
     jr $ra
+
+setPlayerZero:
+	sb $zero, playerHP
+	jr $ra	# return to loop
 
 getDamage:
 	# get random number from 1-10
@@ -71,10 +93,26 @@ getDamage:
     move $t0, $a0		# damage = random number in $a0
     
     jr $t1
+
+printHealth:
+	# print player health
+	printString(chickenBuffer)		# [player]
+	printString(playerHPMessage)	# 's HP:
+	lb $t0, playerHP
+	printInt($t0)
+	
+	# print enemy health
+	printString(enemyHPMessage)		# Enemy's HP:
+	lb $t0, enemyHP
+	printInt($t0)
+	
+	printChar('\n')	# print new line character
+    
+    jr $ra
     
 timer:
 	# wait for about a second before continuing
-	li $t0, 1000000
+	li $t0, 2000000
 	li $t1, 0
 	
 	j timerLoop

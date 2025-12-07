@@ -27,7 +27,6 @@ enemyWinString: .asciiz "\nYour chicken lost...\n\n"
 gameOverString: .asciiz "Not enough money to continue.\nGame Over.\n"
 
 invalidChoiceMsg: .asciiz "Invalid selection. Try again.\n"
-newLine: .byte '\n'
 chickenOwned: .byte 0
 playerHP: .byte 100        #user starting hp
 enemyHP: .byte 100        #enemy starting hp
@@ -84,13 +83,15 @@ getChickenName:
     lb $a1, chickenCharNum
     syscall
 
-	move $t1, $a0	# copy for use
+	move $t1, $a0		# copy for validation
+	subi $t1, $t1, 1	# subtract 1 to fit checkIfValid
     j checkIfValid
-    
+
+# let user retry is name is invalid
 checkIfValid:
-    # let user retry is name is invalid
+    # shift to next byte 
+    addi $t1, $t1, 1	# on the first go through, this just resets $t1 back to $a0
     lb $t0, ($t1)		# load single byte (one character) 
-    addi $t1, $t1, 1	# shift to next byte 
     
 	# continue to betting if string is valid
     beqz $t0, placeBet	# branch on null terminator
@@ -108,7 +109,9 @@ isNewLine:
 	beq $t1, 1, invalidChicken	# invalid if the first char is \n
 	
 	# not the first character, valid
-	j checkIfValid
+	# replace \n with \0 for later use
+	sb $zero, ($t1)
+	j checkIfValid	# return
 	
 checkASCII:
     blt $t0, 'a', invalidChicken
@@ -200,9 +203,7 @@ exit:
     printInt($t0)
     
     # print new line character
-    li $v0, 11
-    lb $t0, newLine
-    syscall
+    printChar('\n')
     
     # exit program
     li $v0, 10
