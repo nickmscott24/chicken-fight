@@ -32,6 +32,7 @@ playerHP: .byte 100        #user starting hp
 enemyHP: .byte 100        #enemy starting hp
 money: .word 50
 numWins: .asciiz "Fights won: "
+earnings: .asciiz "You ended with $"
 
 .globl main
 .text
@@ -201,7 +202,13 @@ exit:
     printString(numWins)
     lb $t0, wins
     printInt($t0)
+    # print new line character
+    printChar('\n')
     
+    # print final earnings
+    printString(earnings)
+    lb $t0, money
+    printInt($t0)
     # print new line character
     printChar('\n')
     
