@@ -8,14 +8,15 @@ menu2: .asciiz "Main Menu:\n1) Play\n2) Store\n3) Quit\n\nCurrent Funds: $"
 menu2Selection: .asciiz "\nPlease make a selection: "
 playAgain: .asciiz "Would you like to play again?\n"
 gift: .asciiz "\nThanks for playing!\nIn fact, have $50 and a chicken on the house!\n"
-line: .asciiz "\n~~~~~~~~~~~~~~~\n"
+line: .asciiz "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
 chickenPrompt: .asciiz "\nPlease enter a name for your chicken: "
 invalidChickenString: .asciiz "\nTry again, but this time actually put in a name."
 .align 2
 chickenBuffer: .space 20
 chickenCharNum: .byte 21
 
-placeBetString: .asciiz "\nEnter your bet: "
+placeBetString1: .asciiz "\nPlace Your Bets!\n\nYou have $"
+placeBetString2: .asciiz " to work with!\nEnter your bet: "
 invalidBetString: .asciiz "\nInvalid bet; please try again.\n"
 currentBet: .word 0
 fightResult: .byte 0
@@ -120,16 +121,20 @@ invalidChicken:
     j getChickenName
 
 placeBet:
-    printString(placeBetString)
-
-    li $v0, 5
-    syscall
+    # print betting prompt
+    printString(line)
+    printString(placeBetString1)
+    lw $t0, money
+    printInt($t0)
+    printString(placeBetString2)
+    
+    getInt
     move $t0, $v0      # bet entered
 
     lw $t1, money
 
-    blez $t0, invalidBet
-    bgt  $t0, $t1, invalidBet
+    blez $t0, invalidBet		# bet less than 0
+    bgt  $t0, $t1, invalidBet	# bet larger than current money
 
     # store bet
     sw $t0, currentBet
