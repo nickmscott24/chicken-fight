@@ -10,13 +10,15 @@ enemyWinMessage: .asciiz "\nOpponent wins! Your chicken has been defeated!"
 fightLoop:
     # do player turn
     jal playerTurn
+    jal timer
     
     # check if enemy dead
     lb $t0, enemyHP
     blez $t0, onPlayerWin
-     
+    
     # do enemy turn
     jal enemyTurn
+	jal timer
     
     # check if player dead
     lb $t0, playerHP
@@ -69,3 +71,17 @@ getDamage:
     move $t0, $a0		# damage = random number in $a0
     
     jr $t1
+    
+timer:
+	# wait for about a second before continuing
+	li $t0, 1000000
+	li $t1, 0
+	
+	j timerLoop
+
+timerLoop:
+	addi $t1, $t1, 1
+	blt $t1, $t0, timerLoop
+	
+	# timer complete, return to fightLoop
+	jr $ra

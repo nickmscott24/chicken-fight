@@ -173,10 +173,12 @@ onPlayerWin:
     sb $t0, wins
 
     printString(playerWinString)
+    jal timer	# wait a bit before returning to menu
     j menuLoop
 
 onEnemyWin:
     printString(enemyWinString)
+    jal timer
 
     # mark chicken as dead
     sb $zero, chickenOwned
