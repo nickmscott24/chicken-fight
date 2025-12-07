@@ -12,6 +12,13 @@
 	syscall
 .end_macro
 
+# prints a character
+.macro printChar(%char)
+	li $v0, 11
+	li $a0, %char
+	syscall
+.end_macro
+
 # reads an integer
 .macro getInt
 	li $v0, 5
