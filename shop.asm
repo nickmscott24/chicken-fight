@@ -1,3 +1,7 @@
+# Final Project Group 9
+# Orobosa Aghahowa, Kenny Huynh, Andrew Rabadi, Nicholas Scott
+# 12/7/25
+
 .data
 shopHeader: .asciiz "\n==================[ SHOP ]==================\n"
 shopOptions: .asciiz "What would you like to do?\n1) Purchase new chicken ($50)\n2) Exit\n"

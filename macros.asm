@@ -1,3 +1,7 @@
+# Final Project Group 9
+# Orobosa Aghahowa, Kenny Huynh, Andrew Rabadi, Nicholas Scott
+# 12/7/25
+
 # prints a predefined string
 .macro printString(%string)
 	li $v0, 4
