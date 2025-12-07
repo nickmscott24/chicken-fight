@@ -1,10 +1,3 @@
-.include "macros.asm"
-.include "data.asm"
-
-.globl shopStart
-.globl purchaseChicken
-.globl exitShop
-
 .data
 shopHeader: .asciiz "\n==================[ SHOP ]==================\n"
 shopOptions: .asciiz "What would you like to do?\n1) Purchase new chicken ($50)\n2) Exit\n"
@@ -36,8 +29,8 @@ purchaseChicken:
 	
     # update chickenOwned
     la $t1, chickenOwned
-    li $t0, 1
-    sw $t0, ($t1)
+    lb $t0, 1
+    sb $t0, ($t1)
     
     j getChickenName	# leave shop and name new chicken
 

@@ -1,134 +1,71 @@
-.include "data.asm"
-
-.globl fightLoop
-.globl enemyZero
-.globl checkEnemyDead
-.globl playerZero
-.globl checkPlayerDead
-.globl playerWins
-.globl enemyWins
-
 .data
-playerMessage: .asciiz "You dealt damage: "
-enemyMessage: .asciiz "Enemy dealt damage: "
-playerHPMessage: .asciiz "Your chicken HP: "
-enemyHPMessage: .asciiz "Enemy chicken HP: "
-playerWinMessage: .asciiz "Your chicken wins!"
-enemyWinMessage: .asciiz "Opponent wins! Your chicken has been defeated!"
+playerMessage: .asciiz "\nYou dealt damage: "
+enemyMessage: .asciiz "\nEnemy dealt damage: "
+playerHPMessage: .asciiz "\nYour chicken HP: "
+enemyHPMessage: .asciiz "\nEnemy chicken HP: "
+playerWinMessage: .asciiz "\nYour chicken wins!"
+enemyWinMessage: .asciiz "\nOpponent wins! Your chicken has been defeated!"
 
 .text
 fightLoop:
-
-    #generate the random damage from 0 to 10
-    li $v0, 42
-    li $a0, 1        #lower bound - 1
-    li $a1, 10       #upper bound - 10
-    syscall
-    move $t0, $a0    #damage = random number in $a0
-
-    #print out damage message
-    li $v0, 4
-    la $a0, playerMessage
-    syscall
-
-    li $v0, 1
-    move $a0, $t0
-    syscall
-
-    #subtract damage from enemy HP
-    la $t1, enemyHP
-    lw $t2, 0($t1)           #t2 = current enemy hp
-    sub $t2, $t2, $t0        #new hp = hp - damage
-
-    #prevent negative HP
-    bltz $t2, enemyZero
-    sw $t2, 0($t1)
-    j checkEnemyDead
-
-enemyZero:
-    li $t2, 0
-    sw $t2, 0($t1)
-
-checkEnemyDead:
-    #print enemy HP
-    li $v0, 4
-    la $a0, enemyHPMessage
-    syscall
-
-    li $v0, 1
-    move $a0, $t2
-    syscall
-
-    #if enemey HP reaches 0, then user iwns
-    beqz $t2, playerWins
-
-    #insert newLine
-    li $v0, 4
-    la $a0, newLine
-    syscall
-
-    #generate the random damage from 0 to 10
-    li $v0, 42
-    li $a0, 1   #lower bound - 1
-    li $a1, 10  #upper bound - 10
-    syscall
-    move $t0, $a0    #damage = random number in $a0
-
-    #print amount of damage dealt
-    li $v0, 4
-    la $a0, enemyMessage
-    syscall
-
-    li $v0, 1
-    move $a0, $t0
-    syscall
-
-    #subtract from player HP
-    la $t1, playerHP
-    lw $t2, 0($t1)
-    sub $t2, $t2, $t0
-
-    #prevent negative HP
-    bltz $t2, playerZero
-    sw $t2, 0($t1)
-    j checkPlayerDead
-
-playerZero:
-    li $t2, 0
-    sw $t2, 0($t1)
-
-checkPlayerDead:
-    #print out player HP
-    li $v0, 4
-    la $a0, playerHPMessage
-    syscall
-
-    li $v0, 1
-    move $a0, $t2
-    syscall
-
-    #if player HP reaches 0, then opponent wins
-    beqz $t2, enemyWins
-
-    #insert newLine
-    li $v0, 4
-    la $a0, newLine
-    syscall
-
-
-
-playerWins:
-    li $v0, 4
-    la $a0, playerWinMessage
-    syscall
+    # do player turn
+    jal playerTurn
     
-    li $v0, 10
-    syscall
-
-enemyWins:
-    li $v0, 4
-    la $a0, enemyWinMessage
-    syscall
+    # check if enemy dead
+    lb $t0, enemyHP
+    blez $t0, onPlayerWin
+     
+    # do enemy turn
+    jal enemyTurn
     
-    li $v0, 10
+    # check if player dead
+    lb $t0, playerHP
+    blez $t0, onEnemyWin
+	
+	# no one died; loop
+	j fightLoop
+    
+playerTurn:
+    # generate the random damage from 1 to 10
+    la $t0, getDamage
+    jalr $t1, $t0	# damage stored in $t0
+    
+    # print out damage message
+    printString(playerMessage)
+    printInt($t0)
+
+    # subtract damage from enemy HP
+    lb $t1, enemyHP
+    sub $t1, $t1, $t0
+    sb $t1, enemyHP
+    
+    # return to loop
+    jr $ra
+
+enemyTurn:
+	# generate the random damage from 1 to 10
+    la $t0, getDamage
+    jalr $t1, $t0	# damage stored in $t0
+    
+    # print out damage message
+    printString(enemyMessage)
+    printInt($t0)
+
+    # subtract damage from player HP
+    lb $t1, playerHP
+    sub $t1, $t1, $t0
+    sb $t1, playerHP
+    
+    # return to loop
+    jr $ra
+
+getDamage:
+	# get random number from 1-10
+	li $v0, 42
+    li $a0, 0   
+    li $a1, 20			# upper bound - 20
     syscall
+    addi $a0, $a0, 10	# increase range to 10-30
+    move $t0, $a0		# damage = random number in $a0
+    
+    jr $t1
