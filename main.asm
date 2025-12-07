@@ -4,7 +4,8 @@
 
 .data
 menu1: .asciiz "Welcome to Chicken Fight\nPlease make a selection:\n(1) Play\n(2) Exit\nChoice: "
-menu2: .asciiz "Main Menu:\n1) Play\n2) Store\n3) State\n4) Save Game\n5) Load Game\n6) Quit\nChoice: "
+menu2: .asciiz "Main Menu:\n1) Play\n2) Store\n3) Quit\n\nCurrent Funds: $"
+menu2Selection: .asciiz "\nPlease make a selection: "
 playAgain: .asciiz "Would you like to play again?\n"
 gift: .asciiz "\nThanks for playing!\nIn fact, have $50 and a chicken on the house!\n"
 line: .asciiz "\n~~~~~~~~~~~~~~~\n"
@@ -26,10 +27,11 @@ gameOverString: .asciiz "Not enough money to continue.\nGame Over.\n"
 
 invalidChoiceMsg: .asciiz "Invalid selection. Try again.\n"
 newLine: .byte '\n'
-chickenOwned: .word 0
+chickenOwned: .byte 0
 playerHP: .byte 100        #user starting hp
 enemyHP: .byte 100        #enemy starting hp
 money: .word 50
+numWins: .asciiz "Fights won: "
 
 .globl main
 .text
@@ -48,22 +50,29 @@ main:	# make sure to check "Initialize Program Counter to global 'main' if defin
     
 menuLoop:	# menu if NOT player's first time
 	printString(menu2)
+	# print balance
+	lw $t0, money
+	printInt($t0)
+	printString(menu2Selection)
 	
 	# get selection
 	getInt
 	move $t0, $v0
 	beq $t0, 1, placeBet
 	beq $t0, 2, shopStart
-	# others have not been implemented
-    beq $t0, 6, exit
+    beq $t0, 3, exit
     
     printString(invalidChoiceMsg)
     j menuLoop
-	
 
 firstChicken:    # if the player just started
     printString(gift)
     printString(line)
+    
+    # update chickenOwned
+    li $t0, 1
+    sb $t0, chickenOwned
+    
     j getChickenName
 
 getChickenName:
@@ -170,7 +179,6 @@ onEnemyWin:
     # game over if player cannot afford new chicken
     lw $t0, money
     blt $t0, 50, gameOver
-
     
     j menuLoop
 
@@ -179,5 +187,16 @@ gameOver:
     j exit
 
 exit:
+    # print number of wins
+    printString(numWins)
+    lb $t0, wins
+    printInt($t0)
+    
+    # print new line character
+    li $v0, 11
+    lb $t0, newLine
+    syscall
+    
+    # exit program
     li $v0, 10
     syscall

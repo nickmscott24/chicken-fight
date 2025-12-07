@@ -2,7 +2,8 @@
 shopHeader: .asciiz "\n==================[ SHOP ]==================\n"
 shopOptions: .asciiz "What would you like to do?\n1) Purchase new chicken ($50)\n2) Exit\n"
 currentBalance: .asciiz "\nYou currently have $"
-shopSelection: .asciiz "Please make a selection: "
+shopSelection: .asciiz "\nPlease make a selection: "
+hasChickenString: .asciiz "\nYou already have a chicken!\n"
 
 .text
 shopStart:
@@ -17,23 +18,30 @@ shopStart:
 	
 	# get user selection
 	getInt
-	move $t1, $v0
-	beq $t1, 1, purchaseChicken
-    beq $t1, 2, exitShop
+	move $t0, $v0
+	beq $t0, 1, purchaseChicken
+    beq $t0, 2, exitShop
     
 purchaseChicken:
+	lb $t0, chickenOwned
+	beq $t0, 1, hasChicken
+	
+	# player does not already have a chicken
 	# assumes player has >=$50
+	lw $t0, money
 	subi $t0, $t0, 50
-	la $t1, money # get address of money
-	sw $t0, ($t1)
+	sw $t0, money
 	
     # update chickenOwned
-    la $t1, chickenOwned
-    lb $t0, 1
-    sb $t0, ($t1)
+    li $t0, 1
+    sb $t0, chickenOwned
     
     j getChickenName	# leave shop and name new chicken
 
+hasChicken:
+	printString(hasChickenString)
+	j shopStart
+	
 exitShop:
 	# send player back to menu
 	j menuLoop
