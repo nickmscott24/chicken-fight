@@ -38,6 +38,14 @@ money: .word 50
 numWins: .asciiz "Fights won: "
 earnings: .asciiz "You ended with $"
 
+# ASCII art files
+winArtFile:  .asciiz "win-art.txt"
+loseArtFile: .asciiz "lose-art.txt"
+
+# ASCII art buffer
+.align 2
+artBuffer: .space 2048
+
 .globl main
 .text
 main:	# make sure to check "Initialize Program Counter to global 'main' if defined"
@@ -65,7 +73,7 @@ menuLoop:	# menu if NOT player's first time
 	move $t0, $v0
 	beq $t0, 1, placeBet
 	beq $t0, 2, shopStart
-    beq $t0, 3, exit
+    	beq $t0, 3, exit
     
     printString(invalidChoiceMsg)
     j menuLoop
@@ -167,6 +175,9 @@ beginFight:
     j fightLoop
 
 onPlayerWin:
+    la $a0, winArtFile
+    jal displayArt	# calls the ascii art display
+
     # add winnings (double)
     lw $t0, currentBet
     lw $t1, money
@@ -185,6 +196,9 @@ onPlayerWin:
     j menuLoop
 
 onEnemyWin:
+    la $a0, loseArtFile
+    jal displayArt	# calls the ascii art display
+
     printString(enemyWinString)
     jal timer
 
@@ -200,6 +214,54 @@ onEnemyWin:
 gameOver:
     printString(gameOverString)
     j exit
+
+displayArt:
+    addi $sp, $sp, -12
+    sw $ra, 0($sp)
+    sw $s0, 4($sp)
+    sw $s1, 8($sp)
+
+    move $s1, $a0
+    printChar('\n')	# newline for display 
+
+    # open the ascii art file
+    li $v0, 13
+    move $a0, $s1
+    li $a1, 0
+    syscall
+    move $s0, $v0
+
+    # read from the ascii art file
+    li $v0, 14
+    move $a0, $s0
+    la $a1, artBuffer
+    li $a2, 2047
+    syscall
+    move $t0, $v0
+
+    # store art into buffer to be printed
+    la $t1, artBuffer
+    add $t1, $t1, $t0
+    sb $zero, 0($t1)
+
+    # print the art
+    li $v0, 4
+    la $a0, artBuffer
+    syscall
+
+    printChar('\n')
+
+    # close the art file
+    li $v0, 16
+    move $a0, $s0
+    syscall
+
+   # restore the registers and return
+    lw $ra, 0($sp)
+    lw $s0, 4($sp)
+    lw $s1, 8($sp)
+    addi $sp, $sp, 12
+    jr $ra
 
 exit:
     # print number of wins
